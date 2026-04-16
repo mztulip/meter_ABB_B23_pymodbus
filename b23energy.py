@@ -8,23 +8,19 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 logging.getLogger("pymodbus").setLevel(logging.INFO)
 
-INVALID_U64 = 0xFFFFFFFFFFFFFFFF
-INVALID_S64_MAX = 0x7FFFFFFFFFFFFFFF
-INVALID_S64_MIN = 0x8000000000000000
-
 def read_u64(client, address, slave=1):
     r = client.read_holding_registers(address=address, count=4, device_id=slave)
     if r.isError():
         return None
     val = (r.registers[0] << 48) | (r.registers[1] << 32) | (r.registers[2] << 16) | r.registers[3]
-    return None if val == INVALID_U64 else val
+    return None if val == 0xFFFFFFFFFFFFFFFF else val
 
 def read_s64(client, address, slave=1):
     r = client.read_holding_registers(address=address, count=4, device_id=slave)
     if r.isError():
         return None
     val = (r.registers[0] << 48) | (r.registers[1] << 32) | (r.registers[2] << 16) | r.registers[3]
-    if val == INVALID_S64_MAX or val == INVALID_S64_MIN:
+    if val == 0x7FFFFFFFFFFFFFFF:
         return None
     if val >= 0x8000000000000000:
         val -= 0x10000000000000000
